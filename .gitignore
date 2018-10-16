@@ -1,3 +1,4 @@
+.vs/*
 .vscode/*
 DashboardServer/bin/*
 DashboardServer/obj/*
