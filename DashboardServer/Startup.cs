@@ -15,12 +15,9 @@ namespace DashboardServer
 {
     public class Startup
     {
-        private readonly string ConnectionString;
-
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
-            ConnectionString = "Data Source=sql2008r2;Initial Catalog=desenv_PortalEstrategia;Persist Security Info=True;User ID=usr_desenvolvimento;Password=12345678";
         }
 
         public IConfiguration Configuration { get; }
@@ -37,7 +34,7 @@ namespace DashboardServer
                     var dashboardStorage = new DataBaseEditaleDashboardStorage();
                     configurator.SetDashboardStorage(dashboardStorage);
 
-                    var conexao = new SqlConnectionStringBuilder(ConnectionString);
+                    var conexao = new SqlConnectionStringBuilder(Configuration.GetConnectionString("BrickConnStr"));
                     conexao.UserID = "usr_cdis_report";
                     conexao.Password = "123456";
                     var parameters = new CustomStringConnectionParameters(conexao.ConnectionString);
@@ -64,6 +61,7 @@ namespace DashboardServer
                             e.ConnectionParameters = new CustomStringConnectionParameters(conexao.ConnectionString);
                         }
                     };*/
+                    configurator.AllowExecutingCustomSql = true;
                     DashboardConfigurator.PassCredentials = true;
                 });
             services.AddDevExpressControls(settings => settings.Resources = ResourcesType.ThirdParty | ResourcesType.DevExtreme);

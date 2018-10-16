@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Xml.Linq;
+using System.Xml.XPath;
 
 namespace DashboardServer.Utils
 {
@@ -21,7 +22,7 @@ namespace DashboardServer.Utils
             //Connection = connection;
         }
 
-        public string AddDashboard(XDocument document, string dashboardName)
+        public string AddDashboard(XDocument dashboard, string dashboardName)
         {
             const string sql = @"
 INSERT INTO [dbo].[Dashboard]
@@ -47,8 +48,8 @@ INSERT INTO [dbo].[Dashboard]
                 param: new
                 {
                     id = dashboardID,
-                    dashboardName = dashboardName,
-                    dashboard = document.ToString()
+                    dashboardName,
+                    dashboard = dashboard.ToString()
                 });
 
             return dashboardID.ToString();
@@ -73,7 +74,34 @@ INSERT INTO [dbo].[Dashboard]
                 DashboardDictionary[dashboardID] = dashboard;
             }
 
-            return XDocument.Parse(dashboard);
+            XDocument xDocument = GetDashboardXmlDocument(dashboard);
+
+            return xDocument;
+        }
+
+        private XDocument GetDashboardXmlDocument(string dashboard)
+        {
+            var connectionStringBuilder = new SqlConnectionStringBuilder(Connection.ConnectionString);
+            var dicionarioParametros = new Dictionary<string, string>
+            {
+                { "userid", connectionStringBuilder.UserID },
+                { "password", connectionStringBuilder.Password },
+                { "server", connectionStringBuilder.DataSource },
+                { "database", connectionStringBuilder.InitialCatalog }
+            };
+            var xDocument = XDocument.Parse(dashboard);
+            var parameters = xDocument
+                .XPathSelectElements("/Dashboard/DataSources/SqlDataSource/Connection/Parameters/Parameter")
+                .Where(el => dicionarioParametros.Keys.Contains(el.Attribute("Name").Value));
+
+            foreach (var parameter in parameters)
+            {
+                var parameterName = parameter.Attribute("Name").Value;
+                var parameterValue = dicionarioParametros[parameterName];
+                parameter.SetAttributeValue("Value", parameterValue);
+            }
+
+            return xDocument;
         }
 
         public IEnumerable<DashboardInfo> GetAvailableDashboardsInfo()
@@ -107,7 +135,7 @@ UPDATE [dbo].[Dashboard]
                 param: new
                 {
                     id = dashboardID,
-                    dashboard = dashboard
+                    dashboard
                 });
 
             if (DashboardDictionary.ContainsKey(dashboardID))
