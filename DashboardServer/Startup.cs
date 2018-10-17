@@ -10,6 +10,7 @@ using System.Data.SqlClient;
 using DevExpress.DashboardWeb;
 using DevExpress.DashboardCommon;
 using DevExpress.DataAccess.ConnectionParameters;
+using DevExpress.DataAccess.Web;
 
 namespace DashboardServer
 {
@@ -61,6 +62,13 @@ namespace DashboardServer
                             e.ConnectionParameters = new CustomStringConnectionParameters(conexao.ConnectionString);
                         }
                     };*/
+                    //configurator.SetConnectionStringsProvider(new MyDataSourceWizardConnectionStringsProvider());
+
+                    configurator.ConfigureDataConnection += (s, e) =>
+                    {
+
+                    };
+
                     configurator.AllowExecutingCustomSql = true;
                     DashboardConfigurator.PassCredentials = true;
                 });
